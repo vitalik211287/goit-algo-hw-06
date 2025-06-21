@@ -1,7 +1,9 @@
+# goit-algo-hw-06 | Домашнє завдання: Графи
+
 import networkx as nx
 import matplotlib.pyplot as plt
 from collections import deque
-
+import heapq
 
 # Завдання 1: Створення графа транспортної мережі
 G = nx.Graph()
@@ -37,48 +39,72 @@ print("Ступені вершин:")
 for node in G.nodes():
     print(f"{node}: {G.degree(node)}")
 
-    # Завдання 2
+# Завдання 2: Реалізація DFS і BFS
 
 def dfs_recursive(graph, vertex, visited=None):
     if visited is None:
         visited = set()
     visited.add(vertex)
-    print(vertex, end=' ')  # Відвідуємо вершину
+    print(vertex, end=' ')
     for neighbor in graph[vertex]:
         if neighbor not in visited:
             dfs_recursive(graph, neighbor, visited)
 
-
 def bfs_recursive(graph, queue, visited=None):
-    # Перевіряємо, чи існує множина відвіданих вершин, якщо ні, то ініціалізуємо нову
     if visited is None:
         visited = set()
-    # Якщо черга порожня, завершуємо рекурсію
     if not queue:
         return
-    # Вилучаємо вершину з початку черги
     vertex = queue.popleft()
-    # Перевіряємо, чи відвідували раніше дану вершину
     if vertex not in visited:
-        # Якщо не відвідували, друкуємо вершину
         print(vertex, end=" ")
-        # Додаємо вершину до множини відвіданих вершин.
         visited.add(vertex)
-        # Додаємо невідвіданих сусідів даної вершини в кінець черги.
         queue.extend(set(graph[vertex]) - visited)
-    # Рекурсивний виклик функції з тією ж чергою та множиною відвіданих вершин
     bfs_recursive(graph, queue, visited)
-
-# print("DFS:", dfs_recursive(G, "A"))
-# print("BFS:", bfs_recursive(G, deque(["A"])))
-
-# dfs_recursive(G, "A", visited=None)
-# bfs_recursive(G, deque(["A"]), visited=None)
 
 print("\nDFS:", end=" ")
 dfs_recursive(G, "A")
 
-# print("\nBFS (ітеративно):", bfs(G, "A"))
-
 print("\nBFS:", end=" ")
 bfs_recursive(G, deque(["A"]))
+
+# Завдання 3: Реалізація алгоритму Дейкстри з таблицею
+
+def print_table(distances, visited):
+    print("\n")
+    print("{:<10} {:<10} {:<10}".format("Вершина", "Відстань", "Перевірено"))
+    print("-" * 30)
+    for vertex in distances:
+        distance = distances[vertex] if distances[vertex] != float('inf') else "∞"
+        status = "Так" if vertex in visited else "Ні"
+        print("{:<10} {:<10} {:<10}".format(vertex, distance, status))
+    print("\n")
+
+def dijkstra(graph, start):
+    distances = {node: float("inf") for node in graph.nodes()}
+    distances[start] = 0
+    visited = set()
+    queue = [(0, start)]
+
+    while queue:
+        current_distance, current_node = heapq.heappop(queue)
+
+        if current_node in visited:
+            continue
+        visited.add(current_node)
+
+        for neighbor in graph.neighbors(current_node):
+            weight = graph[current_node][neighbor]['weight']
+            distance = current_distance + weight
+            if distance < distances[neighbor]:
+                distances[neighbor] = distance
+                heapq.heappush(queue, (distance, neighbor))
+
+        print_table(distances, visited)
+
+    return distances
+
+shortest_paths = dijkstra(G, "A")
+print("Найкоротші відстані від вузла A:")
+for target, distance in shortest_paths.items():
+    print(f"До {target}: {distance}")
